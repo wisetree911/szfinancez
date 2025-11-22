@@ -6,7 +6,38 @@ from app.core.database import SessionDep
 from app.models.user import UserModel
 from app.models.portfolio_position import PortfolioPositionModel
 from app.models.portfolio import PortfolioModel
+from app.models.asset import Asset
+from app.services.all import Service
 router = APIRouter(prefix="/users", tags=["Users"])
+
+
+@router.get("/users/{user_id}")
+async def get_user():
+    ...
+
+@router.post("/users")
+async def create_user():
+    ...
+
+@router.delete("/users/{user_id}")
+async def delete_user():
+    ...
+
+@router.get("/users")
+async def get_users():
+    ...
+
+
+
+
+
+
+
+
+
+@router.post("/user/{user_id}/assets")
+async def get_user_assets(user_id: int, session: SessionDep):
+    return await Service.get_user_assets(session=session, user_id=user_id)
 
 @router.post("/users/create")
 async def add_users(user_schema: UserSchema, session: SessionDep):
