@@ -24,9 +24,12 @@ class UsersRepository:
         return new_user
     
     @staticmethod
-    async def delete(session, user_id: int):
-        ...
+    async def delete(session, user: UserModel):
+        await session.delete(user)
+        await session.commit()
     
     @staticmethod
     async def get_all(session):
-        ...
+        query = select(UserModel)
+        result = await session.execute(query)
+        return result.scalars().all()
