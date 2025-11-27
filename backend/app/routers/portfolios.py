@@ -6,19 +6,19 @@ router = APIRouter(prefix="/portfolios", tags=["Portfolios"])
 
 @router.get("/", response_model=list[PortfolioResponse])
 async def get_all(session: SessionDep):
-    return await PortfolioService.get_all(session=session)
+    return await PortfolioService.get_all_portfolios(session=session)
 
 @router.get("/{portfolio_id}", response_model=PortfolioResponse)
 async def get_by_id(session: SessionDep, portfolio_id: int):
-    return await PortfolioService.get_by_id(session=session, portfolio_id=portfolio_id)
+    return await PortfolioService.get_portfolio_by_portfolio_id(session=session, portfolio_id=portfolio_id)
 
 @router.post("/{portfolio_id}", response_model=PortfolioResponse)
 async def create(session: SessionDep, portfolio_schema: PortfolioCreate):
-    return await PortfolioService.create(session=session, portfolio_schema=portfolio_schema)
+    return await PortfolioService.create_portfolio(session=session, portfolio_schema=portfolio_schema)
 
 @router.delete("/{portfolio_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_by_id(session: SessionDep, portfolio_id: int):
-    await PortfolioService.delete(session=session, portfolio_id=portfolio_id)
+    await PortfolioService.delete_portfolio_by_portfolio_id(session=session, portfolio_id=portfolio_id)
     return
 
 @router.get("/user/{user_id}")

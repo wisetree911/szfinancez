@@ -34,7 +34,7 @@ class PortfolioPositionRepository:
         await session.commit()
 
     @staticmethod
-    async def get_by_portfolio_id(session, portfolio_id):
+    async def get_all_by_portfolio_id(session, portfolio_id):
         query = select(PortfolioPosition).where(PortfolioPosition.portfolio_id == portfolio_id)
         portfolio_positions = await session.execute(query)
         return portfolio_positions.scalars().all()

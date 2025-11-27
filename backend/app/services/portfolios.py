@@ -4,18 +4,18 @@ from fastapi import HTTPException
 
 class PortfolioService:
     @staticmethod
-    async def get_all(session):
+    async def get_all_portfolios(session):
         return await PortfolioRepository.get_all(session=session)
     
     @staticmethod
-    async def get_by_id(session, portfolio_id: int):
+    async def get_portfolio_by_portfolio_id(session, portfolio_id: int):
         portfolio = await PortfolioRepository.get_by_id(session=session, portfolio_id=portfolio_id)
         if portfolio is None:
             raise HTTPException(404, "SZ portfolio not found")
         return portfolio
     
     @staticmethod
-    async def create(session, portfolio_schema):
+    async def create_portfolio(session, portfolio_schema):
         return await PortfolioRepository.create(
             session=session,
             user_id=portfolio_schema.user_id,
@@ -23,7 +23,7 @@ class PortfolioService:
         )
     
     @staticmethod
-    async def delete(session, portfolio_id: int):
+    async def delete_portfolio_by_portfolio_id(session, portfolio_id: int):
         portfolio = await PortfolioRepository.get_by_id(session=session, portfolio_id=portfolio_id)
         if portfolio is None:
             raise HTTPException(404, "SZ portfolio not found")

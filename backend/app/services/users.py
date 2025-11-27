@@ -8,14 +8,14 @@ class UserService:
         return await UserRepository.get_all(session=session)
     
     @staticmethod
-    async def get_one(session, user_id: int):
-        user = await UserRepository.get_one(session=session, user_id=user_id)
+    async def get_by_user_id(session, user_id: int):
+        user = await UserRepository.get_by_id(session=session, user_id=user_id)
         if user is None:
             raise HTTPException(404, "SZ user not found")
         return user
 
     @staticmethod
-    async def create(session, user_schema):
+    async def create_user(session, user_schema):
         return await UserRepository.create(
             session=session,
             name=user_schema.name,
@@ -23,8 +23,8 @@ class UserService:
             )
 
     @staticmethod
-    async def delete(session, user_id: int):
-        user = await UserRepository.get_one(session=session, user_id=user_id)
+    async def delete_user(session, user_id: int):
+        user = await UserRepository.get_by_id(session=session, user_id=user_id)
         if user is None:
             raise HTTPException(404, "SZ user not found")
         

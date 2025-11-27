@@ -9,14 +9,14 @@ class AssetPriceRepository:
         return result.scalars().all()
     
     @staticmethod
-    async def get_by_assert_id(session, asset_id: int):
+    async def get_by_asset_id(session, asset_id: int):
         query = select(AssetPrice).where(AssetPrice.asset_id == asset_id)
         result = await session.execute(query)
         asserts = result.scalars().all()
         return asserts
     
     @staticmethod
-    async def add_price(session,
+    async def create(session,
             asset_id,
             price,
             currency,

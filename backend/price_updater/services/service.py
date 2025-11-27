@@ -35,7 +35,7 @@ async def update_prices(session, asset_registry):
             logger.warning(f"⚠ Нет цены для тикера {ticker}")
             continue
 
-        await AssetPriceRepository.add_price(
+        await AssetPriceRepository.create(
             session=session,
             asset_id=asset_id,
             price=price,

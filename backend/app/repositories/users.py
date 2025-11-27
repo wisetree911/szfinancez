@@ -9,7 +9,7 @@ class UserRepository:
         return result.scalars().all()
     
     @staticmethod
-    async def get_one(user_id: int, session):
+    async def get_by_id(user_id: int, session):
         query = select(User).where(User.id == user_id)
         result = await session.execute(query)
         user = result.scalar_one_or_none()

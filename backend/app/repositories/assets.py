@@ -31,7 +31,7 @@ class AssetRepository:
             )
         session.add(new_asset)
         await session.commit()
-        await session.refresh(new_asset) # достать + айдишник от бд
+        await session.refresh(new_asset)
         return new_asset
     
     @staticmethod
