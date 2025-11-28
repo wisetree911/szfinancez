@@ -1,16 +1,11 @@
 from fastapi import APIRouter, status, Depends
 from app.schemas.user import UserCreate, UserResponse
-from app.core.database import SessionDep, get_session
-
-from sqlalchemy.ext.asyncio import AsyncSession
+# from app.core.database import SessionDep, get_session
+from app.api.deps import get_user_service
+# from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.users import UserService
 
 router = APIRouter(prefix="/users", tags=["Users"])
-
-def get_user_service(
-        session: AsyncSession = Depends(get_session)
-) -> UserService:
-    return UserService(session=session)
 
 @router.get("/{user_id}",
              response_model=UserResponse,
