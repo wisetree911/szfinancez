@@ -20,16 +20,15 @@ async def get_assets(service: AssetService=Depends(get_asset_service)):
     return await service.get_all()
 
 @router.post("/", response_model=AssetResponse)
-async def create_asset(asset_schema: AssetCreate, service: AssetService=Depends(get_asset_service)):
-    return await service.create(asset_schema=asset_schema)
+async def create_asset(payload: AssetCreate, service: AssetService=Depends(get_asset_service)):
+    return await service.create(payload)
 
 @router.delete("/{asset_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_asset(asset_id: int, service: AssetService=Depends(get_asset_service)):
     await service.delete(asset_id=asset_id)
     return
 
-@router.patch("/{asset_id}")
+@router.patch("/{asset_id}", response_model=AssetResponse)
 async def update_asset(asset_id: int, payload: AssetUpdate, service: AssetService=Depends(get_asset_service)):
-    updated = await service.update(asset_id=asset_id, data=payload.dict(exclude_unset=True))
-    return updated
+    return await service.update(asset_id=asset_id, payload=payload)
 ## TODO : add sector column to other cruds

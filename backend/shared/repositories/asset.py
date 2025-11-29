@@ -1,7 +1,7 @@
-from requests import session
 from sqlalchemy import select
 from shared.models.asset import Asset
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.schemas.asset import AssetCreate, AssetUpdate
 
 class AssetRepository:
     def __init__(self, session: AsyncSession):
@@ -10,8 +10,7 @@ class AssetRepository:
     async def get_by_id(self, asset_id: int):
         query = select(Asset).where(Asset.id == asset_id)
         result = await self.session.execute(query)
-        asset = result.scalar_one_or_none()
-        return asset
+        return result.scalar_one_or_none()
     
     async def get_all(self):
         query = select(Asset)
@@ -21,29 +20,24 @@ class AssetRepository:
     async def get_by_ticker(self, ticker: str):
         query = select(Asset).where(Asset.ticker == ticker)
         result = await self.session.execute(query)
-        asset = result.scalar_one_or_none()
-        return asset
+        return result.scalar_one_or_none()
     
-    async def create(self, ticker: str, full_name: str, type: str):
-        new_asset = Asset(
-            ticker=ticker, 
-            full_name=full_name,
-            type=type
-            )
-        self.session.add(new_asset)
+    async def create(self, obj_in: AssetCreate):
+        obj = Asset(**obj_in.dict())
+        self.session.add(obj)
         await self.session.commit()
-        await self.session.refresh(new_asset)
-        return new_asset
+        await self.session.refresh(obj)    
+        return obj
     
-    async def delete(self, asset: Asset):
-        await self.session.delete(asset)
-        await self.session.commit()
-
-    
-    async def update(self, asset: Asset, data: dict):
-        for field, value in data.items():
+    async def update(self, asset: Asset, obj_in: AssetUpdate):
+        update_data=obj_in.dict(exclude_unset=True)
+        for field, value in update_data.items():
             setattr(asset, field, value)
         await self.session.commit()
         await self.session.refresh(asset)
         return asset
+    
+    async def delete(self, asset: Asset):
+        await self.session.delete(asset)
+        await self.session.commit()
     
