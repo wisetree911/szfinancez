@@ -17,19 +17,25 @@ class AnalyticsService:
         self.asset_repo=AssetRepository(session=session)
 
     async def portfolio_snapshot(self, portfolio_id: int):
+        # получаю портфолио 1 обращение
+        # получаю список позиций 1 обращение
+        # получаю список последних цен по позициям и сохраняю 1 обращение
+        # получаю инфу по каждому активу Х обращений
+        # Х + 3
         portfolio = await self.portfolio_repo.get_by_id(portfolio_id=portfolio_id)
         positions = await self.portfolio_position_repo.get_by_portfolio_id(portfolio_id)
-        tops =list()
+        tops=list()
         if not positions: raise HTTPException(404, "SZ no positions were found")
         total_value = int()
-        prices = {} # asset_id : current price
-        for pos in positions:
-            price = await self.asset_price_repo.get_last_price_by_id(pos.asset_id) * pos.quantity
-            prices[pos.asset_id] = price
+        prices = await self.asset_price_repo.get_prices_dict_by_ids(pos.asset_id for pos in positions)
+        
+        total_value = sum(pos.quantity * prices[pos.asset_id] for pos in positions)
+        invested_value = sum([pos.avg_price * pos.quantity for pos in positions])
+        total_profit = total_value - invested_value
+        total_profit_percent = total_profit / invested_value * 100
+        positions_count=len(positions)
 
-        total_value = sum(prices.values())
-        invested_value = 0
-        for pos in positions:
+        for pos in positions: # нужно получать список орм ассетов по портфолио айди (1 запрос вместо икс)
             cur_asset = await self.asset_repo.get_by_id(pos.asset_id)
 
             new_top = TopPosition(
@@ -45,13 +51,8 @@ class AnalyticsService:
             )
             tops.append(new_top)
 
-        invested_value = sum([pos.avg_price * pos.quantity for pos in positions])
-        total_profit = total_value - invested_value
-        total_profit_percent = total_profit / invested_value * 100
-        count = await self.portfolio_position_repo.get_unique_assets_count_by_portfolio_id(portfolio_id=portfolio_id)
-                # get top 3 positions by part
-
-
+        
+        
         return PortfolioShapshotResponse(
             portfolio_id=portfolio.id,
             name=portfolio.name,
@@ -60,18 +61,13 @@ class AnalyticsService:
             total_profit_percent=total_profit_percent,
             invested_value=invested_value,
             currency=portfolio.currency,
-            positions_count=count,
+            positions_count=positions_count,
             top_positions= tops
-
         )
-        # get total_value_invested
-        # total_money_now = sum[pos.asset_id.get_current_price() for pos in get_portfolio_positions_by_portfolio_id]
-        # total_money_invested = sum[pos.avg_price * pos.quantity for pos in get_portfolio_positions_by_portfolio_id]
-        # total_profit = total_money_now - total_money_invested 
-        # total_profit_percent = total_profit / total_money_invested * 100
-        # top3 = get_portfolio_positions.sort(by quantity * avg_price desc)
-        # total_value + total_invested + total_profit + total_profit_percent for each of 3 positions
+    
 
+
+    
     async def sector_distribution(self, portfolio_id):
         pass
 
