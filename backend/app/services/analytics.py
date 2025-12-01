@@ -50,7 +50,8 @@ class AnalyticsService:
                 current_price=prices[pos.asset_id],
                 current_value=pos.quantity * prices[pos.asset_id],
                 profit=pos.quantity * prices[pos.asset_id] - pos.quantity * pos.avg_price,
-                profit_percent = ((prices[pos.asset_id] - pos.avg_price) / pos.avg_price) * 100
+                profit_percent = ((prices[pos.asset_id] - pos.avg_price) / pos.avg_price) * 100,
+                weight_percent=((pos.quantity * prices[pos.asset_id])/total_value) * 100
             )
             tops.append(new_top)
         tops = sorted(tops, key=lambda pos: pos.current_value, reverse=True)
@@ -66,6 +67,7 @@ class AnalyticsService:
             currency=portfolio.currency,
             positions_count=positions_count,
             top_positions=top_three
+
         )
     
 
