@@ -1,6 +1,5 @@
 from fastapi import Depends, status
 from fastapi import APIRouter
-from app.core.database import SessionDep
 from app.services.assets import AssetService
 from app.schemas.asset import AssetCreate, AssetResponse, AssetUpdate
 from app.api.deps import get_asset_service
