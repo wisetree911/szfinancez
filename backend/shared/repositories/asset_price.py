@@ -14,8 +14,8 @@ class AssetPriceRepository:
     async def create(self, obj_in: AssetPriceCreate):
         obj=AssetPrice(**obj_in.dict())
         self.session.add(obj)
-        await self.session.commit()
-        await self.session.refresh(obj)
+        # await self.session.commit()
+        # await self.session.refresh(obj)
         return obj
     
     async def get_all(self):
