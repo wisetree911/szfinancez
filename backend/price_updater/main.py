@@ -4,9 +4,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.core.database import async_session_maker
 from price_updater.services.asset_registry import AssetRegistry
-from price_updater.services.service import update_prices
 from price_updater.config import UPDATE_INTERVAL
-
+from price_updater.services.service import PricesService
 asset_registry = AssetRegistry()
 
 async def reload_assets():
@@ -18,7 +17,8 @@ async def reload_assets():
 async def job():
     """Основная задача — обновление цен для всех активов."""
     async with async_session_maker() as session:
-        await update_prices(session, asset_registry)
+        service = PricesService(session)
+        await service.update_prices(asset_registry)
 
 
 async def main():
