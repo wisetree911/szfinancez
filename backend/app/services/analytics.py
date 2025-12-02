@@ -9,7 +9,7 @@ from shared.repositories.asset import AssetRepository
 from shared.repositories.portfolio_position import PortfolioPositionRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
-from app.schemas.analytics import PortfolioShapshotResponse, TopPosition, SectorDistributionResponse, SectorPositions
+from app.schemas.analytics import PortfolioShapshotResponse, TopPosition, SectorDistributionResponse, SectorPosition
 class AnalyticsService:
     def __init__(self, session: AsyncSession):
         self.session=session
@@ -31,7 +31,6 @@ class AnalyticsService:
                                                            currency=portfolio.currency,
                                                            positions_count=0,
                                                            top_positions=[])
-        total_value = int()
         asset_ids=[pos.asset_id for pos in positions]
         prices = await self.asset_price_repo.get_prices_dict_by_ids(asset_ids)
         
@@ -39,7 +38,6 @@ class AnalyticsService:
         invested_value = sum(pos.avg_price * pos.quantity for pos in positions)
         total_profit = total_value - invested_value
         total_profit_percent = total_profit / invested_value * 100
-        positions_count=len(positions)
         assets = await self.asset_repo.get_assets_dict_by_ids(asset_ids)
         tops=list()
         for pos in positions:
@@ -67,7 +65,7 @@ class AnalyticsService:
             total_profit_percent=total_profit_percent,
             invested_value=invested_value,
             currency=portfolio.currency,
-            positions_count=positions_count,
+            positions_count=len(positions),
             top_positions=top_three
 
         )
@@ -76,7 +74,6 @@ class AnalyticsService:
 
     # вынести список секторов прилично, оптимизировать скорость
     async def sector_distribution(self, portfolio_id):
-        sectors = ["energy", "finance", "retail", "transport", "metals", "it", "construction", "industrial", "telecom", "agro", "healthcare"]
         portfolio = await self.portfolio_repo.get_by_id(portfolio_id)
         if portfolio is None: raise HTTPException(404, "SZ portfolio not found")
         positions = await self.portfolio_position_repo.get_by_portfolio_id(portfolio_id)
@@ -87,25 +84,24 @@ class AnalyticsService:
         prices = await self.asset_price_repo.get_prices_dict_by_ids(asset_ids)
         total_value = sum(pos.quantity * prices[pos.asset_id] for pos in positions)
         assets = await self.asset_repo.get_assets_dict_by_ids(asset_ids)
-        
-        sector_to_current_value = dict.fromkeys(sectors, 0)
+        sector_to_value={}
         for pos in positions:
-            sector_to_current_value[assets[pos.asset_id].sector] += (prices[pos.asset_id] * pos.quantity)
+            sec=assets[pos.asset_id].sector
+            value=prices[pos.asset_id] * pos.quantity
+            sector_to_value[sec]  = sector_to_value.get(sec, 0) + value
         sector_positions = []
-        for sector in sectors:
-            sector_pos = SectorPositions(sector=sector, 
-                            current_value=sector_to_current_value[sector], 
-                            weight_percent=(sector_to_current_value[sector]/total_value)*100)
-            if sector_pos.current_value != 0: sector_positions.append(sector_pos)
-        
+        for sector in sector_to_value.keys():
+            sector_positions.append( SectorPosition(sector=sector, 
+                            current_value=sector_to_value[sector], 
+                            weight_percent=(sector_to_value[sector]/total_value)*100))
+        sector_positions.sort(key=lambda x: x.current_value, reverse=True)
         return SectorDistributionResponse(
-            portfolio_id=portfolio_id,
+            portfolio_id=portfolio.id,
             name=portfolio.name,
             total_value=total_value,
             currency=portfolio.currency,
             sectors=sector_positions
         )
-
 
 
     async def positions_breakdown(self, portfolio_id):
