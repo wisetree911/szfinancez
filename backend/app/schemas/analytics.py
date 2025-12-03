@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from pydantic import BaseModel, Field
 from typing import List
 
@@ -41,6 +41,7 @@ class PortfolioShapshotResponse(BaseModel):
         )
 
 
+
 class SectorPosition(BaseModel):
     sector: str=Field(..., description="sector name, for example \"retail\"")
     current_value: float=Field(..., description="current value of portfolio assets from stated sector")
@@ -53,11 +54,21 @@ class SectorDistributionResponse(BaseModel):
     currency: str=Field(..., description="currency of portfolio, for example: RUB")
     sectors: List[SectorPosition]
 
+    @classmethod
+    def empty(cls, portfolio):
+        return cls(
+            portfolio_id = portfolio.id,
+            name = portfolio.name,
+            total_value = 0,
+            currency = portfolio.currency,
+            sectors = []
+        )
+
+
 
 class PortfolioPrice(BaseModel):
-    timestamp: datetime.datetime
-    total_value: float
-
+    timestamp: datetime=Field(..., description="Timestamp in iso8601")
+    total_value: float=Field(..., description="total value of portfolio at selectet timestamp")
 
 class PortfolioDynamicsResponse(BaseModel):
     portfolio_id : int=Field(..., description="portfolio ID")

@@ -34,7 +34,7 @@ class AnalyticsService:
         self.portfolio_position_repo=PortfolioPositionRepository(session=session)
         self.asset_repo=AssetRepository(session=session)
 
-    async def portfolio_snapshot(self, portfolio_id: int): # рассмотреть сырыe sql запросы для аналитики и свой репо
+    async def portfolio_snapshot(self, portfolio_id: int) -> PortfolioShapshotResponse: # рассмотреть сырыe sql запросы для аналитики и свой репо
         portfolio = await self.portfolio_repo.get_by_id(portfolio_id=portfolio_id)
         if portfolio is None: 
             raise HTTPException(404, "SZ portfolio not found")
@@ -80,15 +80,11 @@ class AnalyticsService:
         )
     
 
-    async def sector_distribution(self, portfolio_id):
+    async def sector_distribution(self, portfolio_id: int) -> SectorDistributionResponse:
         portfolio = await self.portfolio_repo.get_by_id(portfolio_id)
         if portfolio is None: raise HTTPException(404, "SZ portfolio not found")
         positions = await self.portfolio_position_repo.get_by_portfolio_id(portfolio_id)
-        if not positions: return SectorDistributionResponse(portfolio_id=portfolio_id,
-                                                            name=portfolio.name,
-                                                            total_value=0,
-                                                            currency=portfolio.currency,
-                                                            sectors=[])
+        if not positions: return SectorDistributionResponse.empty(portfolio)
         asset_ids=[pos.asset_id for pos in positions]
         prices = await self.asset_price_repo.get_prices_dict_by_ids(asset_ids)
         total_value = sum(pos.quantity * prices[pos.asset_id] for pos in positions)
@@ -117,7 +113,7 @@ class AnalyticsService:
         pass
     
 
-    async def portfolio_dynamics_for_24h(self, portfolio_id: int):
+    async def portfolio_dynamics_for_24h(self, portfolio_id: int) -> PortfolioDynamicsResponse:
         portfolio = await self.portfolio_repo.get_by_id(portfolio_id=portfolio_id)
         positions = await self.portfolio_position_repo.get_by_portfolio_id(portfolio_id=portfolio_id)
         asset_ids = [pos.asset_id for pos in positions]
