@@ -18,13 +18,13 @@ from app.analytics.portfolio_snapshot import (
     calc_position_profit_percent,
     calc_position_weight_in_portfolio,
 )
-def get_portfolio_price_by_ts(ts: int, asset_prices: List[AssetPrice]):
+def get_portfolio_price_by_ts(ts: int, asset_prices: List[AssetPrice], id_to_q):
     total_price = 0
     for asset_price in asset_prices:
         timestamp = asset_price.timestamp.replace(second=0, microsecond=0)
         if timestamp == ts:
-            total_price += asset_price.price
-    return total_price if total_price != 0 else 1
+            total_price += asset_price.price * id_to_q[asset_price.asset_id]
+    return total_price if total_price != 0 else None
         
 class AnalyticsService:
     def __init__(self, session: AsyncSession):
@@ -132,10 +132,14 @@ class AnalyticsService:
             ts = (datetime.utcnow() - timedelta(minutes=15*i)).replace(second=0, microsecond=0)
             time_series.append(ts)
         time_series = sorted(time_series, reverse=False)
-
+        asset_id_to_quantity = {}
+        for pos in positions:
+            asset_id_to_quantity[pos.asset_id] = pos.quantity
         data = []
         for ts in time_series:
-            data.append(PortfolioPrice(timestamp=ts, total_value=get_portfolio_price_by_ts(ts, asset_prices)))
+            total_value = get_portfolio_price_by_ts(ts, asset_prices, asset_id_to_quantity)
+            if total_value:
+                data.append(PortfolioPrice(timestamp=ts, total_value=get_portfolio_price_by_ts(ts, asset_prices, asset_id_to_quantity)))
         
         return PortfolioDynamicsResponse(
             portfolio_id=portfolio.id,
