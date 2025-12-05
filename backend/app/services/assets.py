@@ -1,4 +1,3 @@
-from requests import session
 from app.schemas.asset import AssetCreate, AssetUpdate
 from shared.repositories.asset import AssetRepository
 from sqlalchemy.ext.asyncio import AsyncSession

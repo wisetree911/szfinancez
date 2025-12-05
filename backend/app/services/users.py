@@ -1,5 +1,4 @@
 from turtle import onclick
-from requests import session
 from shared.repositories.user import UserRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException

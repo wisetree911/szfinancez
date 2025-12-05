@@ -1,4 +1,3 @@
-from requests import session
 from shared.repositories.trade import TradeRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
