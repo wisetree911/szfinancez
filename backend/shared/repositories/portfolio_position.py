@@ -1,8 +1,8 @@
 from sqlalchemy import select, func
 from shared.models.portfolio_position import PortfolioPosition
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.schemas.portfolio_position import PortfolioPositionUpdate, PortfolioPositionCreate, PrettyPortfolioPosition
-
+from app.schemas.portfolio_position import PortfolioPositionUpdate, PortfolioPositionCreate
+from typing import List
 class PortfolioPositionRepository:
     def __init__(self, session: AsyncSession):
         self.session=session
@@ -24,7 +24,7 @@ class PortfolioPositionRepository:
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
     
-    async def get_by_portfolio_id(self, portfolio_id: int):
+    async def get_by_portfolio_id(self, portfolio_id: int) -> List[PortfolioPosition]:
         query = select(PortfolioPosition).where(PortfolioPosition.portfolio_id == portfolio_id)
         result = await self.session.execute(query)
         return result.scalars().all()
