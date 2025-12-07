@@ -6,6 +6,10 @@ from app.schemas.analytics import PortfolioShapshotResponse, SectorDistributionR
 from app.api.deps import get_asset_service
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
+@router.get("/{portfolio_id}/total_value")
+async def get_portfolio_total_value(portfolio_id: int, service: AnalyticsService=Depends(get_analytics_service)):
+    return await service.get_portfolio_total_price(portfolio_id=portfolio_id)
+
 @router.get("/{portfolio_id}/shapshot", response_model=PortfolioShapshotResponse)
 async def get_portfolio_shapshot(portfolio_id: int, service: AnalyticsService=Depends(get_analytics_service)):
     return await service.portfolio_snapshot(portfolio_id=portfolio_id)

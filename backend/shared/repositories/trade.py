@@ -2,7 +2,7 @@ from sqlalchemy import select
 from shared.models.trade import Trade
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.trade import TradeCreate, TradeUpdate
-
+from typing import List
 class TradeRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
@@ -36,7 +36,7 @@ class TradeRepository:
         await self.session.delete(trade)
         await self.session.commit()
 
-    async def get_trades_by_portfolio_id(self, portfolio_id: int):
+    async def get_trades_by_portfolio_id(self, portfolio_id: int) -> List[Trade]:
         query = select(Trade).where(Trade.portfolio_id == portfolio_id)
         result = await self.session.execute(query)
         return result.scalars().all()
