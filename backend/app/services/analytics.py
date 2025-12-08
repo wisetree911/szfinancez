@@ -71,20 +71,55 @@ class AnalyticsService:
     #         tops.append(new_top)
     #     tops = sorted(tops, key=lambda pos: pos.current_value, reverse=True)
     #     top_three=tops[:3]
+        # return PortfolioShapshotResponse(
+        #     portfolio_id=portfolio.id,
+        #     name=portfolio.name,
+        #     total_value=total_value,
+        #     total_profit=total_profit,
+        #     total_profit_percent=total_profit_percent,
+        #     invested_value=invested_value,
+        #     currency=portfolio.currency,
+        #     positions_count=len(positions),
+        #     top_positions=top_three
 
-    #     return PortfolioShapshotResponse(
-    #         portfolio_id=portfolio.id,
-    #         name=portfolio.name,
-    #         total_value=total_value,
-    #         total_profit=total_profit,
-    #         total_profit_percent=total_profit_percent,
-    #         invested_value=invested_value,
-    #         currency=portfolio.currency,
-    #         positions_count=len(positions),
-    #         top_positions=top_three
+        # )
+    async def portfolio_snapshot(self, portfolio_id: int):
+        portfolio = await self.portfolio_repo.get_by_id(portfolio_id)
+        trades = await self.trade_repo.get_trades_by_portfolio_id(portfolio_id)
+        asset_ids = [trade.asset_id for trade in trades]
+        asset_ids = set(asset_ids)
+        current_prices = await self.asset_price_repo.get_prices_dict_by_ids(asset_ids)
+        asset_id_to_quantity = dict.fromkeys(asset_ids, 0)
+        for trade in trades:
+            if trade.direction == "buy":
+                asset_id_to_quantity[trade.asset_id] += (trade.quantity )
+            elif trade.direction == "sell":
+                asset_id_to_quantity[trade.asset_id] -= (trade.quantity)
+        current_value = 0
+        for asset_id, quantity in asset_id_to_quantity.items():
+            current_value += current_prices[asset_id] * quantity
+        total_value = 0
+        for trade in trades:
+            if trade.direction == "buy":
+                total_value += trade.quantity * trade.price
+            elif trade.direction == "sell":
+                total_value -= trade.quantity * trade.price
+        profit = current_value - total_value
+        profit_percent = (profit / total_value) * 100
+        count = sum([1 if quantity != 0 else 0 for asset_id, quantity in asset_id_to_quantity.items() ])
+        
+        return PortfolioShapshotResponse(
+            portfolio_id=portfolio.id,
+            name=portfolio.name,
+            total_value=current_value,
+            total_profit=profit,
+            total_profit_percent=profit_percent,
+            invested_value=total_value ,
+            currency=portfolio.currency,
+            positions_count=count,
+            top_positions=[]
 
-    #     )
-    
+        )
 
 #     async def sector_distribution(self, portfolio_id: int) -> SectorDistributionResponse:
 #         portfolio = await self.portfolio_repo.get_by_id(portfolio_id)
