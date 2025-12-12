@@ -57,5 +57,5 @@ def calc_market_value(asset_positive_positons):
     return current_value
 
 def calc_unrealized_return_pct(unrealized_pnl: float, cost_basis: float):
-    # self.upnl / self.cb * 100
     return (unrealized_pnl / cost_basis) * 100
+
