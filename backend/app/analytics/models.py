@@ -18,6 +18,8 @@ class TradeDTO:
             quantity=trade.quantity,
             price=trade.price,
         )
+
+
 @dataclass
 class Lot:
     qty: int
@@ -26,8 +28,9 @@ class Lot:
 @dataclass
 class AssetPosition:
     asset_id: int
+    asset_market_price: float
     lots: Deque[Lot] = field(default_factory=deque)
-
+    
     @property
     def mid_price(self):
         total = 0
@@ -50,7 +53,16 @@ class AssetPosition:
         for lot in self.lots:
             cost_basis += lot.qty * lot.price
         return cost_basis
+    
+    @property
+    def unrealized_pnl(self):
+        absolute_profit = self.market_price - self.mid_price * self.quantity
+        return absolute_profit
+    
+    @property
+    def unrealized_return_pct(self):
+        return (self.unrealized_pnl / self.cost_basis) * 100
 
-# @dataclass
-# class TopPositionDomain:
-#     asset_id: int
+    @property
+    def market_price(self):
+        return self.quantity * self.asset_market_price
