@@ -8,11 +8,11 @@ class TopPosition(BaseModel):
     full_name: str=Field(..., description="full name of asset")
     quantity: int=Field(..., description="quantity of asset")
     avg_buy_price: float=Field(..., description="average buy price of asset")
-    current_price: float=Field(..., description="current price of asset")
-    current_value: float=Field(..., description="current value of position (quantity * current_price)")
-    profit: float= Field(..., description="absolute profit of asset")
-    profit_percent: float=Field(..., description="profit of asset in percents")
-    weight_percent: float=Field(..., description="weight of asset in portfolio in percents")
+    asset_market_price: float=Field(..., description="current price of asset")
+    market_value: float=Field(..., description="current value of position (quantity * current_price)")
+    unrealized_pnl: float= Field(..., description="unrealized PNL of portfolio position")
+    unrealized_return_pct: float=Field(..., description="profit of asset in percents")
+    weight_pct: float=Field(..., description="weight of asset in portfolio in percents")
 
 
 class PortfolioShapshotResponse(BaseModel):
