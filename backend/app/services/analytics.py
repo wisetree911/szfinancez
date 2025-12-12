@@ -7,9 +7,12 @@ from shared.repositories.asset import AssetRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 from app.schemas.analytics import PortfolioShapshotResponse, TopPosition, SectorDistributionResponse, SectorPosition, PortfolioPrice, PortfolioDynamicsResponse
-from app.analytics.portfolio_snapshot import calc_cost_basis, get_asset_id_to_quantity_dict, calc_unrealized_pnl, calc_market_value
+from app.analytics.portfolio_snapshot import get_asset_id_to_quantity_dict, calc_market_value
 from shared.repositories.trade import TradeRepository
+from app.analytics.models import AssetPosition, Lot, TradeDTO
+from app.analytics.analytics_calc import calc_unrealized_pnl, build_only_buy_positions, calc_cost_basis, calc_market_value, calc_unrealized_return_pct
 
+# убрать всю аналитику отсюлаёёда
 class AnalyticsService:
     def __init__(self, session: AsyncSession):
         self.session=session
@@ -19,6 +22,7 @@ class AnalyticsService:
         self.trade_repo=TradeRepository(session=session)
 
     async def get_portfolio_total_price(self, portfolio_id: int):
+
         trades = await self.trade_repo.get_trades_by_portfolio_id(portfolio_id=portfolio_id)
         total_value = 0
         for trade in trades:
@@ -31,25 +35,42 @@ class AnalyticsService:
     async def portfolio_snapshot(self, portfolio_id: int):
         portfolio = await self.portfolio_repo.get_by_id(portfolio_id)
         trades = await self.trade_repo.get_trades_by_portfolio_id(portfolio_id)
-        portfolio_purchase_price = calc_cost_basis(trades)
-        asset_ids = set([trade.asset_id for trade in trades])
+        asset_ids = {trade.asset_id for trade in trades}
         current_prices = await self.asset_price_repo.get_prices_dict_by_ids(asset_ids)
-        asset_id_to_quantity = get_asset_id_to_quantity_dict(trades)
-        market_price = calc_market_value(id_to_price=current_prices, id_to_qty=asset_id_to_quantity)
-        count = sum(1 for quantity in asset_id_to_quantity.values() if quantity != 0)
 
-        unrealized_pnl = calc_unrealized_pnl(portfolio_trades=trades, asset_prices=current_prices)
-        unrealized_return_pct = (unrealized_pnl / portfolio_purchase_price) * 100
+        trade_dtos = [TradeDTO.from_orm(trade) for trade in trades]
+        positions = build_only_buy_positions(trades=trade_dtos)
+        cost_basis = calc_cost_basis(asset_positive_positons=positions)
+        unrealized_pnl = calc_unrealized_pnl(asset_positive_positons=positions, asset_prices=current_prices)
+
+        top_positions = []
+
+        for asset_id in asset_ids:
+            top_positions.append(
+                TopPosition(
+                    asset_id=0,
+                    ticker="none", # достать из ассет репо по asset_ids все данные и оттуда тикеры
+                    full_name="none",  # достать из ассет репо по asset_ids все данные и оттуда имена
+                    quantity=0, # все закрыто внутри модуля аналитики
+                    avg_buy_price=0, # все закрыто внутри модуля аналитики
+                    current_price=0, # достать из current_prices
+                    current_value=0, # все закрыто внутри модуля аналитики + достать из current_prices
+                    profit=0, # все закрыто внутри модуля аналитики + достать из current_prices
+                    profit_percent=0, # все закрыто внутри модуля аналитики + достать из current_prices
+                    weight_percent=0 # все закрыто внутри модуля аналитики + достать из current_prices
+                )
+            )
+
         return PortfolioShapshotResponse(
             portfolio_id=portfolio.id,
             name=portfolio.name,
-            total_value=market_price,
+            market_value=calc_market_value(asset_positive_positons=positions, asset_prices=current_prices),
             unrealized_pnl=unrealized_pnl,
-            unrealized_return_pct=unrealized_return_pct,
-            cost_basis=portfolio_purchase_price ,
+            unrealized_return_pct=calc_unrealized_return_pct(unrealized_pnl=unrealized_pnl, cost_basis=cost_basis),
+            cost_basis=cost_basis ,
             currency=portfolio.currency,
-            positions_count=count,
-            top_positions=[]
+            positions_count=len(positions),
+            top_positions=top_positions
         )
 
 #     async def sector_distribution(self, portfolio_id: int) -> SectorDistributionResponse:
